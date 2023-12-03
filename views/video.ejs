@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>chat</title>
+    <style>
+      #callbtn {
+        color: red;
+        width: 100px;
+        height: 100px;
+        background-color: black;
+      }
+    </style>
+  </head>
+  <body>
+    <input type="hidden" name="vedioId" id="vedioId" value="<%= videoid %>" />
+    <button id="toggleAudioBtn">Toggle Audio</button>
+    <button id="toggleVideoBtn">Toggle Video</button>
+    <div id="video-container">
+      <button id="callbtn">Video Call</button>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js"></script>
+    <script src="/init.js"></script>
+  </body>
+</html>
