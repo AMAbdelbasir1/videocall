@@ -102,7 +102,8 @@ peer.on("call", (call) => {
 function showVideo(stream) {
   let video = document.createElement("video");
   video.srcObject = stream;
-  videoContainer.innerHTML = "";
+  // videoContainer.innerHTML = "";
+  callbtn.style.display = "none";
   videoContainer.appendChild(video);
   video.play();
 }
