@@ -99,11 +99,25 @@ peer.on("call", (call) => {
     });
 });
 
+const videoElements = [];
+
 function showVideo(stream) {
-  let video = document.createElement("video");
-  video.srcObject = stream;
-  // videoContainer.innerHTML = "";
-  callbtn.style.display = "none";
-  videoContainer.appendChild(video);
-  video.play();
+  // Check if a video element already exists for this stream
+  let existingVideo = videoElements.find(
+    (element) => element.srcObject === stream,
+  );
+
+  if (!existingVideo) {
+    // If not, create a new video element
+    let video = document.createElement("video");
+    video.srcObject = stream;
+    video.autoplay = true;
+    video.playsinline = true;
+    video.muted = false; // Set to true if you want to mute the local user's video
+    videoElements.push(video);
+
+    // Append the video element to the video container
+    videoContainer.appendChild(video);
+  }
+  callbtn.remove();
 }
