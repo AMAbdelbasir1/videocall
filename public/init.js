@@ -7,7 +7,6 @@ var peer = new Peer();
 var peerId = null;
 var localStream; // Store the local stream to toggle audio and video
 const peers = {};
-const connectedUsers = {};
 // Array to store the video elements created for each call
 
 socket.on("connect", () => {
@@ -20,9 +19,9 @@ peer.on("open", (id) => {
 });
 
 toggleAudioBtn.onclick = () => {
-  console.log("local stream", localStream);
   if (localStream && localStream.getAudioTracks().length > 0) {
     const enabled = localStream.getAudioTracks()[0].enabled;
+    console.log(enabled);
     if (enabled) {
       localStream.getAudioTracks()[0].enabled = false;
     } else {
@@ -34,6 +33,7 @@ toggleAudioBtn.onclick = () => {
 toggleVideoBtn.onclick = () => {
   if (localStream && localStream.getVideoTracks().length > 0) {
     let enabled = localStream.getVideoTracks()[0].enabled;
+    console.log(enabled);
     if (enabled) {
       localStream.getVideoTracks()[0].enabled = false;
     } else {
@@ -72,9 +72,7 @@ document.getElementById("shareVideoBtn").onclick = () => {
 
       socket.on("user-join", (userId) => {
         console.log(userId);
-        if (!connectedUsers[userId]) {
-          connectToNewUser(userId, stream);
-        }
+        connectToNewUser(userId, stream);
       });
     })
     .catch((err) => {
@@ -105,13 +103,20 @@ socket.on("user-disconnected", (userId) => {
   console.log("peers ", peers);
   if (peers[userId]) peers[userId].close();
 });
-
+const videoElements = [];
 function addVideoStream(video, stream) {
-  video.srcObject = stream;
-  video.addEventListener("loadedmetadata", () => {
-    video.play();
-  });
-  videoContainer.append(video);
+  let existingVideo = videoElements.find(
+    (element) => element.srcObject === stream,
+  );
+  if (!existingVideo) {
+    video.srcObject = stream;
+    video.addEventListener("loadedmetadata", () => {
+      video.play();
+    });
+    videoElements.push(video);
+    videoContainer.append(video);
+  }
+  console.log(videoElements);
 }
 function connectToNewUser(userId, stream) {
   const call = peer.call(userId, stream);
@@ -123,10 +128,8 @@ function connectToNewUser(userId, stream) {
 
   call.on("close", () => {
     video.remove();
-    delete connectedUsers[userId];
     delete peers[userId];
   });
 
   peers[userId] = call;
-  connectedUsers[userId] = video;
 }
