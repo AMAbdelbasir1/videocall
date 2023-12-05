@@ -3,9 +3,9 @@ const toggleVideoBtn = document.getElementById("toggleVideoBtn");
 const videoContainer = document.getElementById("video-container");
 const videoId = document.getElementById("videoId").value;
 const socket = io();
-let peer = new Peer();
+var peer = new Peer();
 var peerId = null;
-let localStream; // Store the local stream to toggle audio and video
+var localStream; // Store the local stream to toggle audio and video
 const peers = {};
 // Array to store the video elements created for each call
 
@@ -19,17 +19,32 @@ peer.on("open", (id) => {
 });
 
 toggleAudioBtn.onclick = () => {
-  localStream.getAudioTracks().forEach((track) => {
-    track.enabled = !track.enabled;
-  });
+  if (localStream && localStream.getAudioTracks().length > 0) {
+    const enabled = localStream.getAudioTracks()[0].enabled;
+    if (enabled) {
+      localStream.getAudioTracks()[0].enabled = false;
+      setUnmuteButton();
+    } else {
+      setMuteButton();
+      localStream.getAudioTracks()[0].enabled = true;
+    }
+  }
 };
 
 toggleVideoBtn.onclick = () => {
-  localStream.getVideoTracks().forEach((track) => {
-    track.enabled = !track.enabled;
-  });
+  if (localStream && localStream.getVideoTracks().length > 0) {
+    let enabled = localStream.getVideoTracks()[0].enabled;
+    if (enabled) {
+      localStream.getVideoTracks()[0].enabled = false;
+      setPlayVideo();
+    } else {
+      setStopVideo();
+      localStream.getVideoTracks()[0].enabled = true;
+    }
+  }
 };
 
+const playStop = () => {};
 // Handle the button click to share your video
 document.getElementById("shareVideoBtn").onclick = () => {
   // Emit the peer ID to the server for new user handling
@@ -37,7 +52,7 @@ document.getElementById("shareVideoBtn").onclick = () => {
     videoId: videoId,
     peerId: peerId,
   });
-  console.log("clicked");
+  // console.log("clicked");
   const myVideo = document.createElement("video");
   myVideo.muted = true;
   const mediaConstraints = {
