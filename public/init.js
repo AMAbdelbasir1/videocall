@@ -50,6 +50,7 @@ document.getElementById("shareVideoBtn").onclick = () => {
     .then((stream) => {
       addVideoStream(myVideo, stream);
       peer.on("call", (call) => {
+        call.answer(stream);
         const video = document.createElement("video");
         call.on("stream", (userVideoStream) => {
           addVideoStream(video, userVideoStream);
@@ -68,6 +69,7 @@ document.getElementById("shareVideoBtn").onclick = () => {
     .then((audioStream) => {
       addVideoStream(myVideo, audioStream);
       peer.on("call", (call) => {
+        call.answer(stream);
         const video = document.createElement("video");
         call.on("stream", (userVideoStream) => {
           addVideoStream(video, userVideoStream);
@@ -89,9 +91,7 @@ socket.on("user-disconnected", (userId) => {
 
 function addVideoStream(video, stream) {
   video.srcObject = stream;
-  video.addEventListener("loadedmetadata", () => {
-    video.play();
-  });
+  video.play();
   videoContainer.append(video);
 }
 function connectToNewUser(userId, stream) {
