@@ -7,7 +7,7 @@ var peer = new Peer();
 var peerId = null;
 var localStream; // Store the local stream to toggle audio and video
 const peers = {};
-const connectedUsers = [];
+const connectedUsers = {};
 // Array to store the video elements created for each call
 
 socket.on("connect", () => {
@@ -42,7 +42,6 @@ toggleVideoBtn.onclick = () => {
   }
 };
 
-const playStop = () => {};
 // Handle the button click to share your video
 document.getElementById("shareVideoBtn").onclick = () => {
   // Emit the peer ID to the server for new user handling
@@ -72,16 +71,14 @@ document.getElementById("shareVideoBtn").onclick = () => {
       localStream = stream;
 
       socket.on("user-join", (userId) => {
-        console.log("video " + userId);
-        if (!connectedUsers.includes(userId)) {
+        console.log(userId);
+        if (!connectedUsers[userId]) {
           connectToNewUser(userId, stream);
-          connectedUsers.push(userId);
         }
       });
     })
     .catch((err) => {
-      console.log(err);
-      // If there's an error, try getting audio-only stream
+      // console.log(err);
       return navigator.mediaDevices.getUserMedia({ audio: true });
     })
     .then((audioStream) => {
@@ -119,17 +116,17 @@ function addVideoStream(video, stream) {
 function connectToNewUser(userId, stream) {
   const call = peer.call(userId, stream);
   const video = document.createElement("video");
+
   call.on("stream", (userVideoStream) => {
     addVideoStream(video, userVideoStream);
   });
+
   call.on("close", () => {
     video.remove();
-    const index = connectedUsers.indexOf(userId);
-    if (index > -1) {
-      connectedUsers.splice(index, 1);
-    }
+    delete connectedUsers[userId];
     delete peers[userId];
   });
 
   peers[userId] = call;
+  connectedUsers[userId] = video;
 }
