@@ -7,6 +7,7 @@ var peer = new Peer();
 var peerId = null;
 var localStream; // Store the local stream to toggle audio and video
 const peers = {};
+const connectedUsers = [];
 // Array to store the video elements created for each call
 
 socket.on("connect", () => {
@@ -19,6 +20,7 @@ peer.on("open", (id) => {
 });
 
 toggleAudioBtn.onclick = () => {
+  console.log("local stream", localStream);
   if (localStream && localStream.getAudioTracks().length > 0) {
     const enabled = localStream.getAudioTracks()[0].enabled;
     if (enabled) {
@@ -68,9 +70,13 @@ document.getElementById("shareVideoBtn").onclick = () => {
         });
       });
       localStream = stream;
+
       socket.on("user-join", (userId) => {
-        console.log(userId);
-        connectToNewUser(userId, stream);
+        console.log("video " + userId);
+        if (!connectedUsers.includes(userId)) {
+          connectToNewUser(userId, stream);
+          connectedUsers.push(userId);
+        }
       });
     })
     .catch((err) => {
@@ -89,7 +95,7 @@ document.getElementById("shareVideoBtn").onclick = () => {
       });
       localStream = audioStream;
       socket.on("user-join", (userId) => {
-        console.log(userId);
+        console.log("audio" + userId);
         connectToNewUser(userId, audioStream);
       });
     })
@@ -99,6 +105,7 @@ document.getElementById("shareVideoBtn").onclick = () => {
 };
 
 socket.on("user-disconnected", (userId) => {
+  console.log("peers ", peers);
   if (peers[userId]) peers[userId].close();
 });
 
@@ -117,6 +124,11 @@ function connectToNewUser(userId, stream) {
   });
   call.on("close", () => {
     video.remove();
+    const index = connectedUsers.indexOf(userId);
+    if (index > -1) {
+      connectedUsers.splice(index, 1);
+    }
+    delete peers[userId];
   });
 
   peers[userId] = call;
