@@ -103,20 +103,13 @@ socket.on("user-disconnected", (userId) => {
   console.log("peers ", peers);
   if (peers[userId]) peers[userId].close();
 });
-const videoElements = [];
+
 function addVideoStream(video, stream) {
-  // let existingVideo = videoElements.find(
-  //   (element) => element.srcObject === stream,
-  // );
-  // if (!existingVideo) {
     video.srcObject = stream;
     video.addEventListener("loadedmetadata", () => {
       video.play();
     });
-    videoElements.push(video);
     videoContainer.append(video);
-  // }
-  console.log(videoElements);
 }
 function connectToNewUser(userId, stream) {
   const call = peer.call(userId, stream);

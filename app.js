@@ -12,8 +12,8 @@ io.on("connection", (socket) => {
   console.log("server connected");
   socket.on("join", ({ videoId, peerId }) => {
     socket.join(videoId);
-    socket.broadcast.to(videoId).emit("user-join", peerId);
-  
+    socket.to(videoId).emit("user-join", peerId);
+
     socket.on("disconnect", () => {
       socket.broadcast.to(videoId).emit("user-disconnected", peerId);
     });
