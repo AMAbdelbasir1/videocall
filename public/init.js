@@ -49,7 +49,7 @@ document.getElementById("shareVideoBtn").onclick = () => {
   });
   // console.log("clicked");
   const myVideo = document.createElement("video");
-  myVideo.muted = true;
+  // myVideo.muted = true;
   const mediaConstraints = {
     audio: true,
     video: { facingMode: "user" }, // Specify the user-facing camera
