@@ -23,9 +23,7 @@ toggleAudioBtn.onclick = () => {
     const enabled = localStream.getAudioTracks()[0].enabled;
     if (enabled) {
       localStream.getAudioTracks()[0].enabled = false;
-      setUnmuteButton();
     } else {
-      setMuteButton();
       localStream.getAudioTracks()[0].enabled = true;
     }
   }
@@ -36,9 +34,7 @@ toggleVideoBtn.onclick = () => {
     let enabled = localStream.getVideoTracks()[0].enabled;
     if (enabled) {
       localStream.getVideoTracks()[0].enabled = false;
-      setPlayVideo();
     } else {
-      setStopVideo();
       localStream.getVideoTracks()[0].enabled = true;
     }
   }
@@ -108,7 +104,9 @@ socket.on("user-disconnected", (userId) => {
 
 function addVideoStream(video, stream) {
   video.srcObject = stream;
-  video.play();
+  video.addEventListener("loadedmetadata", () => {
+    video.play();
+  });
   videoContainer.append(video);
 }
 function connectToNewUser(userId, stream) {
