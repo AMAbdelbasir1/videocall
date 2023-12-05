@@ -4,7 +4,7 @@ const videoContainer = document.getElementById("video-container");
 const videoId = document.getElementById("videoId").value;
 const socket = io();
 let peer = new Peer();
-let peerId = null;
+var peerId = null;
 let localStream; // Store the local stream to toggle audio and video
 const peers = {};
 // Array to store the video elements created for each call
@@ -58,6 +58,7 @@ document.getElementById("shareVideoBtn").onclick = () => {
       });
       localStream = stream;
       socket.on("user-join", (userId) => {
+        console.log(userId);
         connectToNewUser(userId, stream);
       });
     })
@@ -69,7 +70,7 @@ document.getElementById("shareVideoBtn").onclick = () => {
     .then((audioStream) => {
       addVideoStream(myVideo, audioStream);
       peer.on("call", (call) => {
-        call.answer(stream);
+        call.answer(audioStream);
         const video = document.createElement("video");
         call.on("stream", (userVideoStream) => {
           addVideoStream(video, userVideoStream);
@@ -77,7 +78,8 @@ document.getElementById("shareVideoBtn").onclick = () => {
       });
       localStream = audioStream;
       socket.on("user-join", (userId) => {
-        connectToNewUser(userId, stream);
+        console.log(userId);
+        connectToNewUser(userId, audioStream);
       });
     })
     .catch((err) => {

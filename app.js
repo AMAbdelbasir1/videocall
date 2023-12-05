@@ -10,12 +10,12 @@ const io = require("socket.io")(server);
 
 io.on("connection", (socket) => {
   console.log("server connected");
-  socket.on("join", (roomId, userId) => {
-    socket.join(roomId);
-    socket.broadcast.to(roomId).emit("user-join", userId);
-
+  socket.on("join", ({ videoId, peerId }) => {
+    socket.join(videoId);
+    socket.broadcast.to(videoId).emit("user-join", peerId);
+  
     socket.on("disconnect", () => {
-      socket.broadcast.to(roomId).emit("user-disconnected", userId);
+      socket.broadcast.to(videoId).emit("user-disconnected", peerId);
     });
   });
 });
