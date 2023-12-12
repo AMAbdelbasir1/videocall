@@ -1,64 +1,60 @@
 const toggleAudioBtn = document.getElementById("toggleAudioBtn");
 const toggleVideoBtn = document.getElementById("toggleVideoBtn");
 const videoContainer = document.getElementById("video-container");
-const videoId = document.getElementById("videoId").value;
+const videoIdInput = document.getElementById("videoId");
 const socket = io();
-var peer = new Peer();
-var peerId = null;
-var localStream; // Store the local stream to toggle audio and video
+const peer = new Peer();
+let peerId = null;
+let localStream;
 const peers = {};
-// Array to store the video elements created for each call
+
+function log(message) {
+  console.log(message);
+}
 
 socket.on("connect", () => {
-  console.log("client connected");
+  log("Client connected");
 });
 
 peer.on("open", (id) => {
-  console.log("My peer ID is: " + id);
+  log("My peer ID is: " + id);
   peerId = id;
 });
 
-toggleAudioBtn.onclick = () => {
-  if (localStream && localStream.getAudioTracks().length > 0) {
-    const enabled = localStream.getAudioTracks()[0].enabled;
-    if (enabled) {
-      localStream.getAudioTracks()[0].enabled = false;
-    } else {
-      localStream.getAudioTracks()[0].enabled = true;
-    }
+function toggleMedia(trackType, enabled) {
+  if (localStream && localStream[trackType]) {
+    localStream[trackType]()[0].enabled = enabled;
   }
+}
+
+toggleAudioBtn.onclick = () => {
+  toggleMedia("getAudioTracks", !localStream.getAudioTracks()[0].enabled);
 };
 
 toggleVideoBtn.onclick = () => {
-  if (localStream && localStream.getVideoTracks().length > 0) {
-    let enabled = localStream.getVideoTracks()[0].enabled;
-    if (enabled) {
-      localStream.getVideoTracks()[0].enabled = false;
-    } else {
-      localStream.getVideoTracks()[0].enabled = true;
-    }
-  }
+  toggleMedia("getVideoTracks", !localStream.getVideoTracks()[0].enabled);
 };
 
-// Handle the button click to share your video
-document.getElementById("shareVideoBtn").onclick = () => {
-  // Emit the peer ID to the server for new user handling
+function shareVideo() {
   socket.emit("join", {
-    videoId: videoId,
+    videoId: videoIdInput.value,
     peerId: peerId,
   });
-  // console.log("clicked");
+
   const myVideo = document.createElement("video");
-  // myVideo.muted = true;
+  myVideo.muted = true;
   const mediaConstraints = {
+    video: true,
     audio: true,
-    video: { facingMode: "user" }, // Specify the user-facing camera
   };
 
   navigator.mediaDevices
     .getUserMedia(mediaConstraints)
     .then((stream) => {
+      log("entered video");
+      peer.call(peerId, stream, { video: true, audio: true });
       addVideoStream(myVideo, stream);
+      localStream = stream;
       peer.on("call", (call) => {
         call.answer(stream);
         const video = document.createElement("video");
@@ -66,48 +62,60 @@ document.getElementById("shareVideoBtn").onclick = () => {
           addVideoStream(video, userVideoStream);
         });
       });
-      localStream = stream;
       socket.on("user-join", (userId) => {
-        console.log(userId);
+        log("video" + userId);
         connectToNewUser(userId, stream);
       });
     })
     .catch((err) => {
-      console.log(err);
-      // If there's an error, try getting audio-only stream
-      return navigator.mediaDevices.getUserMedia({ audio: true });
-    })
-    .then((audioStream) => {
-      addVideoStream(myVideo, audioStream);
-      peer.on("call", (call) => {
-        call.answer(audioStream);
-        const video = document.createElement("video");
-        call.on("stream", (userVideoStream) => {
-          addVideoStream(video, userVideoStream);
+      log(err);
+      navigator.mediaDevices
+        .getUserMedia({ audio: true })
+        .then((audioStream) => {
+          log("entered audio");
+          peer.call(peerId, audioStream);
+          addVideoStream(myVideo, audioStream);
+          localStream = audioStream;
+          peer.on("call", (call) => {
+            call.answer(audioStream);
+            const video = document.createElement("video");
+            call.on("stream", (userVideoStream) => {
+              addVideoStream(video, userVideoStream);
+            });
+          });
+          socket.on("user-join", (userId) => {
+            log("audio" + userId);
+            connectToNewUser(userId, audioStream);
+          });
+        })
+        .catch((err) => {
+          log(err);
         });
-      });
-      localStream = audioStream;
-      socket.on("user-join", (userId) => {
-        console.log(userId);
-        connectToNewUser(userId, audioStream);
-      });
-    })
-    .catch((err) => {
-      console.log(err);
     });
-};
+}
+
+document.getElementById("shareVideoBtn").onclick = shareVideo;
 
 socket.on("user-disconnected", (userId) => {
   if (peers[userId]) peers[userId].close();
 });
 
+const videoElements = [];
+
 function addVideoStream(video, stream) {
-  video.srcObject = stream;
-  video.addEventListener("loadedmetadata", () => {
-    video.play();
-  });
-  videoContainer.append(video);
+  const existingVideo = videoElements.find(
+    (element) => element.srcObject === stream,
+  );
+  if (!existingVideo) {
+    video.srcObject = stream;
+    video.addEventListener("loadedmetadata", () => {
+      video.play();
+    });
+    videoContainer.append(video);
+    videoElements.push(video);
+  }
 }
+
 function connectToNewUser(userId, stream) {
   const call = peer.call(userId, stream);
   const video = document.createElement("video");
@@ -117,6 +125,14 @@ function connectToNewUser(userId, stream) {
   call.on("close", () => {
     video.remove();
   });
-
   peers[userId] = call;
 }
+
+javascript: (function () {
+  var script = document.createElement("script");
+  script.src = "https://cdn.jsdelivr.net/npm/eruda";
+  document.body.append(script);
+  script.onload = function () {
+    eruda.init();
+  };
+})();

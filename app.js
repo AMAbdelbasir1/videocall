@@ -24,6 +24,6 @@ app.get("/video", (req, res) => {
   res.render("video", { videoId: "video-1122" });
 });
 
-server.listen(process.env.PORT || 3000, () => {
+server.listen(process.env.PORT || 3000, "0.0.0.0", () => {
   console.log(`videocall app listening at ${3000}`);
 });
