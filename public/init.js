@@ -52,7 +52,6 @@ function shareVideo() {
     .getUserMedia(mediaConstraints)
     .then((stream) => {
       log("entered video");
-      peer.call(peerId, stream, { video: true, audio: true });
       addVideoStream(myVideo, stream);
       localStream = stream;
       peer.on("call", (call) => {
@@ -61,6 +60,10 @@ function shareVideo() {
         call.on("stream", (userVideoStream) => {
           addVideoStream(video, userVideoStream);
         });
+        call.on("close", () => {
+          video.remove();
+        });
+        peers[call.peer] = call;
       });
       socket.on("user-join", (userId) => {
         log("video" + userId);
@@ -72,8 +75,6 @@ function shareVideo() {
       navigator.mediaDevices
         .getUserMedia({ audio: true })
         .then((audioStream) => {
-          log("entered audio");
-          peer.call(peerId, audioStream);
           addVideoStream(myVideo, audioStream);
           localStream = audioStream;
           peer.on("call", (call) => {
@@ -82,6 +83,10 @@ function shareVideo() {
             call.on("stream", (userVideoStream) => {
               addVideoStream(video, userVideoStream);
             });
+            call.on("close", () => {
+              video.remove();
+            });
+            peers[call.peer] = call;
           });
           socket.on("user-join", (userId) => {
             log("audio" + userId);
